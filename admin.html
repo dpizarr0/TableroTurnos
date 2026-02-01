@@ -7,6 +7,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+  <script>
+    if (localStorage.getItem("auth") !== "true") {
+    window.location.href = "login.html";
+  }
+  </script>
+
+
   <style>
     body {
       font-family: Arial;
@@ -44,6 +51,10 @@
 
 <button onclick="guardar()">GUARDAR</button>
 
+<button onclick="cerrarSesion()" style="background:#ef4444; margin-top:20px;">
+  Cerrar sesión
+</button>
+
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
@@ -70,6 +81,12 @@
 
     alert("Turno actualizado");
   }
+
+  function cerrarSesion() {
+    localStorage.removeItem("auth");
+    window.location.href = "login.html";
+  }
+  
 </script>
 
 </body>

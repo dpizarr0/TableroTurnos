@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Admin</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      padding: 40px;
+    }
+    select, textarea, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      background: #22c55e;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>👑 PANEL ADMIN</h1>
+
+<select id="turno">
+  <option value="A">Turno A</option>
+  <option value="B">Turno B</option>
+  <option value="C">Turno C</option>
+</select>
+
+<textarea id="tarea" placeholder="Tarea del turno"></textarea>
+<textarea id="personas" placeholder="Personas (separadas por coma)"></textarea>
+
+<button onclick="guardar()">GUARDAR</button>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
+    authDomain: "gestion-trabajo.firebaseapp.com",
+    databaseURL: "https://gestion-trabajo-default-rtdb.firebaseio.com",
+    projectId: "gestion-trabajo",
+    storageBucket: "gestion-trabajo.firebasestorage.app",
+    messagingSenderId: "415928237993",
+    appId: "1:415928237993:web:7158adc8f77ff426c84eb8"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function guardar() {
+    const turno = document.getElementById('turno').value;
+    const tarea = document.getElementById('tarea').value;
+    const personas = document.getElementById('personas').value;
+
+    db.ref('turnos/' + turno).set({
+      tarea,
+      personas
+    });
+
+    alert("Turno actualizado");
+  }
+</script>
+
+</body>
+</html>

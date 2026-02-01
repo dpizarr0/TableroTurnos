@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tablero de Turnos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: white;
+    }
+    h1 {
+      text-align: center;
+      font-size: 40px;
+      margin: 20px 0;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+    .turno {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 25px;
+    }
+    .turno h2 {
+      font-size: 30px;
+    }
+    .tarea {
+      font-size: 22px;
+      margin-top: 15px;
+    }
+    .personas {
+      font-size: 20px;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📺 TURNOS Y TAREAS</h1>
+
+<div class="container">
+  <div class="turno" id="turnoA">
+    <h2>🟦 TURNO A</h2>
+    <div class="tarea"></div>
+    <div class="personas"></div>
+  </div>
+
+  <div class="turno" id="turnoB">
+    <h2>🟩 TURNO B</h2>
+    <div class="tarea"></div>
+    <div class="personas"></div>
+  </div>
+
+  <div class="turno" id="turnoC">
+    <h2>🟥 TURNO C</h2>
+    <div class="tarea"></div>
+    <div class="personas"></div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
+    authDomain: "gestion-trabajo.firebaseapp.com",
+    databaseURL: "https://gestion-trabajo-default-rtdb.firebaseio.com",
+    projectId: "gestion-trabajo",
+    storageBucket: "gestion-trabajo.firebasestorage.app",
+    messagingSenderId: "415928237993",
+    appId: "1:415928237993:web:7158adc8f77ff426c84eb8"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  ['A', 'B', 'C'].forEach(t => {
+    db.ref('turnos/' + t).on('value', snap => {
+      const data = snap.val();
+      if (!data) return;
+      document.querySelector(`#turno${t} .tarea`).innerText =
+        '🛠️ Tarea: ' + data.tarea;
+      document.querySelector(`#turno${t} .personas`).innerText =
+        '👥 Personas: ' + data.personas;
+    });
+  });
+</script>
+
+</body>
+</html>

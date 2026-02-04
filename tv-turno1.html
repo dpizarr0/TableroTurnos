@@ -66,15 +66,16 @@ db.ref("turnos/turno1").on("value", snap => {
     return;
   }
 
-  data.forEach(a => {
-    cont.innerHTML += `
-      <div class="card">
-        <h2>🛠 ${a.maquina}</h2>
-        <p>📦 ${a.producto}</p>
-        <p>👥 ${a.personas}</p>
-      </div>
-    `;
+  Object.values(data).forEach(a => {
+  cont.innerHTML += `
+    <div class="card">
+      <h2>🛠 ${a.maquina}</h2>
+      <p>📦 ${a.producto}</p>
+      <p>👥 ${a.personas}</p>
+    </div>
+  `;
   });
+
 });
 </script>
 

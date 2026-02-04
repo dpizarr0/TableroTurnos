@@ -229,6 +229,8 @@ function agregarAsignacion() {
 
   db.ref("turnos/" + turno).push(data);
   document.getElementById("personas").value = "";
+
+  cargarAsignaciones();
 }
 
 // cargar asignaciones
@@ -237,7 +239,7 @@ function cargarAsignaciones() {
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
 
-  db.ref("turnos/" + turno).on("value", snap => {
+  db.ref("turnos/" + turno).once("value").then(snap => {
     lista.innerHTML = "";
     snap.forEach(item => {
       const d = item.val();

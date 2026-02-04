@@ -1,92 +1,252 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Panel Admin</title>
+<meta charset="UTF-8">
+<title>Panel Admin</title>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <script>
-    if (localStorage.getItem("auth") !== "true") {
-    window.location.href = "login.html";
-  }
-  </script>
+<!-- Protección -->
+<script>
+if (localStorage.getItem("auth") !== "true") {
+  location.href = "login.html";
+}
+</script>
 
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #020617;
+  color: white;
+  padding: 30px;
+}
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #020617;
-      color: white;
-      padding: 40px;
-    }
-    select, textarea, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-    }
-    button {
-      background: #22c55e;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+select, textarea, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #22c55e;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+hr {
+  margin: 25px 0;
+}
+
+.card {
+  background: #111827;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.logo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 140px;
+}
+</style>
 </head>
+
 <body>
 
-<h1>👑 PANEL ADMIN</h1>
+<h1>👑 Panel Admin</h1>
 
+<label>Turno</label>
 <select id="turno">
-  <option value="A">Turno A</option>
-  <option value="B">Turno B</option>
-  <option value="C">Turno C</option>
+  <option value="turno1">Turno 1</option>
+  <option value="turno2">Turno 2</option>
+  <option value="turno3">Turno 3</option>
 </select>
 
-<textarea id="tarea" placeholder="Tarea del turno"></textarea>
-<textarea id="personas" placeholder="Personas (separadas por coma)"></textarea>
+<hr>
 
-<button onclick="guardar()">GUARDAR</button>
+<h3>Nueva asignación</h3>
 
-<button onclick="cerrarSesion()" style="background:#ef4444; margin-top:20px;">
-  Cerrar sesión
+<label>Máquina</label>
+<select id="maquina" onchange="cargarProductos()"></select>
+
+<label>Producto</label>
+<select id="producto"></select>
+
+<label>Personal (separado por coma)</label>
+<textarea id="personas"></textarea>
+
+<button onclick="agregarAsignacion()">➕ Agregar asignación</button>
+
+<hr>
+
+<h3>Asignaciones del turno</h3>
+<div id="lista"></div>
+
+<button onclick="guardarTurno()">💾 Guardar turno</button>
+
+<button onclick="cerrarSesion()" style="background:#ef4444;margin-top:15px;">
+🚪 Cerrar sesión
 </button>
 
+<img src="logo.png" class="logo">
+
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
-    authDomain: "gestion-trabajo.firebaseapp.com",
-    databaseURL: "https://gestion-trabajo-default-rtdb.firebaseio.com",
-    projectId: "gestion-trabajo",
-    storageBucket: "gestion-trabajo.firebasestorage.app",
-    messagingSenderId: "415928237993",
-    appId: "1:415928237993:web:7158adc8f77ff426c84eb8"
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
+  authDomain: "gestion-trabajo.firebaseapp.com",
+  databaseURL: "https://gestion-trabajo-default-rtdb.firebaseio.com",
+  projectId: "gestion-trabajo",
+  storageBucket: "gestion-trabajo.firebasestorage.app",
+  messagingSenderId: "415928237993",
+  appId: "1:415928237993:web:7158adc8f77ff426c84eb8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// MAQUINAS Y PRODUCTOS 
+const maquinas = {
+  ENFAJIL1: [
+    "ENV 1000 BK 24 GR BEISBOL FJ LAVANDA BOL",
+    "ENV 1000K BERHLA 23GR BOL FAJI MANZ-CANE",
+    "ENV 1000ML 23GR JBL NO CONICO FAJILLA",
+    "ENV 1000 ML 23 GR ALOE NO CONICO FAJILLA",
+    "ENV 1000 BK 24 GR BEISBOL FJ VINAGRE BOL"
+  ],
+  ENFAJIL2: [
+    "ENV 1000 BK 24 GR BEISBOL FJ LAVANDA BOL",
+    "ENV 1000K BERHLA 23GR BOL FAJI MANZ-CANE",
+    "ENV 1000ML 23GR JBL NO CONICO FAJILLA",
+    "ENV 1000 BK 24 GR BEISBOL FJ VINAGRE BOL"
+  ],
+  ENFAJIL3: [
+    "ENV BK 3000 - BK + ASA FAJIL 50.5GR BOLS"
+  ],
+  SOP5K: [
+    "ENV CLAS 5000ml+ASA B BOLSA - 48 MM BERI",
+    "ENV GALON 3785 85GR ASA BERICAP BOLSA",
+    "ENV-GALON 3785CC PC48+ASA 85GR (3217997)",
+    "ENV LIMP 5000 SANPC+ASA 48MM (3217998)",
+    "0-ENV BBQ 470 PALLET PRF-TP 35.5 GR",
+    "ENV GENERICO 5000CC 85GR 48MM BCAP BBL"
+  ],
+  SPLERG1: [
+    "SILO 1000 BK A GRANEL 23.7GR",
+    "SILO BOL 1000ML 23GR JBL NO CONICO",
+    "ENV 1002186 DIAMANTADO 900 - 23.6 GR SIL",
+    "ENV 1000619 300 AGUA OMI 12.7GR SIL 50%P",
+    "ENV 1000621 1000 AGU OM 20.7G SIL 50%PCR",
+    "ENV 600 AGUA OMI 18 GR 50% PCR SILO",
+    "ENV DIAMANTADO 2000CC 31 GR SILO"
+  ],
+  SPLERG2: [
+    "SILO 1000 BK A GRANEL 23.7GR",
+    "SILO BOL 1000ML 23GR JBL NO CONICO",
+    "ENV SILO BOL 3000 BK 50.5GR + ASA",
+    "ENV DTE 500 CC - 1881 PF 15GR PALLE",
+    "ENV 1002186 DIAMANTADO 900 - 23.6 GR SIL",
+    "ENV CLAS 450 ml PALLET - 15 GR",
+    "ENV DDO 900CC 1881 23GR PALLET",
+    "ENV 1002076 PET SOP 354-12ON 28GR-PALLET",
+    "ENV 1002121 1000CC VINAG D-BOLSA - 20.7G",
+    "ENV 1000CC BERHLA 31GR BICARBONATO BL",
+    "ENV 500CC LAVALOZA 25 GRS",
+    "ENV DDO 3000CC 1881 50.5 GR BOLSA",
+    "ENV 1002077 DDO 1000-23 GR PALLET SALSA",
+    "ENV DECO 24GR 510CC BOLSA FLEISCHMANN",
+    "ENV 1001034 16OZ 480C 37GR PC1816 PALLE",
+    "ENV PET 500CC 24GR DESENGRASANT CRISTAL",
+    "ENV 1000619 300 AGUA OMI 12.7GR SIL 50%P",
+    "ENV 1000655 DDO 3000CC 41GRS PALLET SALS",
+    "ENV 1002683 DDO3000CC 41GR PALLET ACEITE",
+    "ENV DIAMANTADO 2000CC 31 GR SILO",
+    "ENV DIAMANTADO 2000CC 31 GR BOLSA SALSAS",
+    "ENV DIAMANTADO 2000CC 31 GR BOLSA",
+    "ENV DIAMANTE 2000CC 31 GR BOLSA"
+  ],
+  SPLERG3: [
+    "SILO BOL 1000ML 23GR JBL NO CONICO",
+    "ENV DTE 1000 CC - 1881 PF 23GR PALLE",
+    "ENV 1002080 355CC SALS SQUEEZE 23GR 33MM",
+    "ENV DDO 900CC 1881 23GR PALLET",
+    "ENV 1002076 PET SOP 354-12ON 28GR-PALLET",
+    "ENV 1002121 1000CC VINAG D-BOLSA - 20.7G",
+    "ENV 1000CC BERHLA 31GR BICARBONATO BL",
+    "ENV 1002077 DDO 1000-23 GR PALLET SALSA",
+    "ENV 1000718 PET 2 OZ BC 24MM SALSA QBCO",
+    "ENV 1000653 PET 188 CC 24MM SALSA AJI QB",
+    "ENV PET 500CC 24GR DESENGRASANT CRISTAL",
+    "ENV DIAMANTE 2000CC 31 GR BOLSA"
+  ],
+  SPLMG600: [
+    "ENV CLAS 4500ml+ASA BOLSA - 48MM BERIC",
+    "ENV CLAS 5000ml+ASA B BOLSA - 48 MM BERI"
+  ],
+  SPLMG800: [
+    "0-ENV BBQ 470 PALLET PRF-TP 35.5 GR"
+  ]
+};
+
+// LÓGICA
+let asignaciones = [];
+const maquinaSelect = document.getElementById("maquina");
+const productoSelect = document.getElementById("producto");
+
+// Cargar máquinas
+for (let m in maquinas) {
+  maquinaSelect.innerHTML += `<option value="${m}">${m}</option>`;
+}
+
+// Cargar productos según máquina
+function cargarProductos() {
+  productoSelect.innerHTML = "";
+  maquinas[maquinaSelect.value].forEach(p => {
+    productoSelect.innerHTML += `<option>${p}</option>`;
+  });
+}
+cargarProductos();
+
+// Agregar asignación
+function agregarAsignacion() {
+  const data = {
+    maquina: maquinaSelect.value,
+    producto: productoSelect.value,
+    personas: document.getElementById("personas").value
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  asignaciones.push(data);
 
-  function guardar() {
-    const turno = document.getElementById('turno').value;
-    const tarea = document.getElementById('tarea').value;
-    const personas = document.getElementById('personas').value;
+  document.getElementById("lista").innerHTML += `
+    <div class="card">
+      <b>🛠 ${data.maquina}</b><br>
+      📦 ${data.producto}<br>
+      👥 ${data.personas}
+    </div>
+  `;
 
-    db.ref('turnos/' + turno).set({
-      tarea,
-      personas
-    });
+  document.getElementById("personas").value = "";
+}
 
-    alert("Turno actualizado");
-  }
+// Guardar turno
+function guardarTurno() {
+  const turno = document.getElementById("turno").value;
+  db.ref("turnos/" + turno).set(asignaciones);
+  alert("Turno guardado correctamente");
+}
 
-  function cerrarSesion() {
-    localStorage.removeItem("auth");
-    window.location.href = "login.html";
-  }
-  
+// Cerrar sesión
+function cerrarSesion() {
+  localStorage.removeItem("auth");
+  location.href = "login.html";
+}
 </script>
 
 </body>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Turno 1</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body {
+  background: #020617;
+  color: white;
+  font-family: Arial;
+  padding: 30px;
+}
+
+.card {
+  background: #111827;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 40px;
+}
+
+.logo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 140px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🕐 Turno 1</h1>
+<div id="contenido"></div>
+
+<img src="logo.png" class="logo">
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
+  authDomain: "gestion-trabajo.firebaseapp.com",
+  databaseURL: "https://gestion-trabajo-default-rtdb.firebaseio.com",
+  projectId: "gestion-trabajo",
+  storageBucket: "gestion-trabajo.firebasestorage.app",
+  messagingSenderId: "415928237993",
+  appId: "1:415928237993:web:7158adc8f77ff426c84eb8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref("turnos/turno1").on("value", snap => {
+  const data = snap.val();
+  const cont = document.getElementById("contenido");
+  cont.innerHTML = "";
+
+  if (!data) {
+    cont.innerHTML = "<p>No hay datos</p>";
+    return;
+  }
+
+  data.forEach(a => {
+    cont.innerHTML += `
+      <div class="card">
+        <h2>🛠 ${a.maquina}</h2>
+        <p>📦 ${a.producto}</p>
+        <p>👥 ${a.personas}</p>
+      </div>
+    `;
+  });
+});
+</script>
+
+</body>
+</html>

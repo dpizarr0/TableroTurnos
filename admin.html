@@ -49,6 +49,10 @@ hr {
   margin-top: 10px;
 }
 
+.danger {
+  background: #ef4444;
+}
+
 .logo {
   position: fixed;
   bottom: 20px;
@@ -63,7 +67,7 @@ hr {
 <h1>👑 Panel Admin</h1>
 
 <label>Turno</label>
-<select id="turno">
+<select id="turno" onchange="cargarAsignaciones()">
   <option value="turno1">Turno 1</option>
   <option value="turno2">Turno 2</option>
   <option value="turno3">Turno 3</option>
@@ -89,16 +93,18 @@ hr {
 <h3>Asignaciones del turno</h3>
 <div id="lista"></div>
 
-<button onclick="guardarTurno()">💾 Guardar turno</button>
+<button onclick="borrarTurno()" class="danger" style="margin-top:15px;">
+🗑️ BORRAR TODO EL TURNO
+</button>
 
-<button onclick="cerrarSesion()" style="background:#ef4444;margin-top:15px;">
+<button onclick="cerrarSesion()" class="danger" style="margin-top:15px;">
 🚪 Cerrar sesión
 </button>
 
 <img src="logo.png" class="logo">
 
 <script>
-
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA7sJENLFLBY_YyGxTkgg_SPsPc5k7d9M0",
   authDomain: "gestion-trabajo.firebaseapp.com",
@@ -112,8 +118,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// MAQUINAS Y PRODUCTOS 
-const maquinas = {
+// Máquinas y productos
+const maquinas = { /* ← ES EXACTAMENTE TU OBJETO, NO LO TOQUÉ */
   ENFAJIL1: [
     "ENV 1000 BK 24 GR BEISBOL FJ LAVANDA BOL",
     "ENV 1000K BERHLA 23GR BOL FAJI MANZ-CANE",
@@ -195,17 +201,15 @@ const maquinas = {
   ]
 };
 
-// LÓGICA
-let asignaciones = [];
+// UI
 const maquinaSelect = document.getElementById("maquina");
 const productoSelect = document.getElementById("producto");
 
-// Cargar máquinas
+// cargar máquinas
 for (let m in maquinas) {
   maquinaSelect.innerHTML += `<option value="${m}">${m}</option>`;
 }
 
-// Cargar productos según máquina
 function cargarProductos() {
   productoSelect.innerHTML = "";
   maquinas[maquinaSelect.value].forEach(p => {
@@ -214,35 +218,60 @@ function cargarProductos() {
 }
 cargarProductos();
 
-// Agregar asignación
+// agregar asignación
 function agregarAsignacion() {
+  const turno = document.getElementById("turno").value;
   const data = {
     maquina: maquinaSelect.value,
     producto: productoSelect.value,
     personas: document.getElementById("personas").value
   };
 
-  asignaciones.push(data);
-
-  document.getElementById("lista").innerHTML += `
-    <div class="card">
-      <b>🛠 ${data.maquina}</b><br>
-      📦 ${data.producto}<br>
-      👥 ${data.personas}
-    </div>
-  `;
-
+  db.ref("turnos/" + turno).push(data);
   document.getElementById("personas").value = "";
 }
 
-// Guardar turno
-function guardarTurno() {
+// cargar asignaciones
+function cargarAsignaciones() {
   const turno = document.getElementById("turno").value;
-  db.ref("turnos/" + turno).set(asignaciones);
-  alert("Turno guardado correctamente");
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  db.ref("turnos/" + turno).on("value", snap => {
+    lista.innerHTML = "";
+    snap.forEach(item => {
+      const d = item.val();
+      lista.innerHTML += `
+        <div class="card">
+          <b>🛠 ${d.maquina}</b><br>
+          📦 ${d.producto}<br>
+          👥 ${d.personas}<br>
+          <button class="danger" onclick="borrarAsignacion('${turno}','${item.key}')">
+            Eliminar
+          </button>
+        </div>
+      `;
+    });
+  });
+}
+cargarAsignaciones();
+
+// borrar una asignación
+function borrarAsignacion(turno, key) {
+  if (confirm("¿Eliminar esta asignación?")) {
+    db.ref("turnos/" + turno + "/" + key).remove();
+  }
 }
 
-// Cerrar sesión
+// borrar turno completo
+function borrarTurno() {
+  const turno = document.getElementById("turno").value;
+  if (confirm("¿Borrar TODO el turno?")) {
+    db.ref("turnos/" + turno).remove();
+  }
+}
+
+// cerrar sesión
 function cerrarSesion() {
   localStorage.removeItem("auth");
   location.href = "login.html";

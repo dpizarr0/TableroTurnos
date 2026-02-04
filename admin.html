@@ -23,7 +23,7 @@ body {
   padding: 30px;
 }
 
-select, textarea, button {
+select, textarea, input, button {
   width: 100%;
   padding: 12px;
   margin-top: 10px;
@@ -83,10 +83,17 @@ hr {
 <label>Producto</label>
 <select id="producto"></select>
 
+<label>Unidades a producir (texto)</label>
+<input id="unidades" placeholder="Ej: 12000 unidades / 3 pallets">
+
+<button onclick="agregarProducto()">➕ Agregar producto</button>
+
+<div id="listaProductos"></div>
+
 <label>Personal (separado por coma)</label>
 <textarea id="personas"></textarea>
 
-<button onclick="agregarAsignacion()">➕ Agregar asignación</button>
+<button onclick="agregarAsignacion()">💾 Guardar asignación</button>
 
 <hr>
 
@@ -118,7 +125,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Máquinas y productos
+
+// Maquinas y productos
 const maquinas = { 
   ENFAJIL1: [
     "ENV 1000 BK 24 GR BEISBOL FJ LAVANDA BOL",
@@ -201,6 +209,7 @@ const maquinas = {
   ]
 };
 
+
 // UI
 const maquinaSelect = document.getElementById("maquina");
 const productoSelect = document.getElementById("producto");
@@ -218,36 +227,90 @@ function cargarProductos() {
 }
 cargarProductos();
 
-// agregar asignación
+
+// productos temporales
+
+let productosAsignados = [];
+
+function agregarProducto() {
+  const producto = productoSelect.value;
+  const unidades = document.getElementById("unidades").value;
+
+  if (!producto || !unidades) {
+    alert("Producto y unidades son obligatorios");
+    return;
+  }
+
+  productosAsignados.push({ producto, unidades });
+  document.getElementById("unidades").value = "";
+  mostrarProductos();
+}
+
+function mostrarProductos() {
+  const cont = document.getElementById("listaProductos");
+  cont.innerHTML = "";
+
+  productosAsignados.forEach((p, i) => {
+    cont.innerHTML += `
+      <div class="card">
+        📦 ${p.producto}<br>
+        🧮 ${p.unidades}
+        <button class="danger" onclick="eliminarProducto(${i})">❌</button>
+      </div>
+    `;
+  });
+}
+
+function eliminarProducto(i) {
+  productosAsignados.splice(i, 1);
+  mostrarProductos();
+}
+
+
+// guardar asignacion
+
 function agregarAsignacion() {
+  if (productosAsignados.length === 0) {
+    alert("Agrega al menos un producto");
+    return;
+  }
+
   const turno = document.getElementById("turno").value;
-  const data = {
+
+  db.ref("turnos/" + turno).push({
     maquina: maquinaSelect.value,
-    producto: productoSelect.value,
-    personas: document.getElementById("personas").value
-  };
+    personas: document.getElementById("personas").value,
+    productos: productosAsignados
+  });
 
-  db.ref("turnos/" + turno).push(data);
+  productosAsignados = [];
   document.getElementById("personas").value = "";
-
+  mostrarProductos();
   cargarAsignaciones();
 }
 
-// cargar asignaciones
+
+// listar asignaciones
+
 function cargarAsignaciones() {
   const turno = document.getElementById("turno").value;
   const lista = document.getElementById("lista");
-  lista.innerHTML = "";
 
   db.ref("turnos/" + turno).once("value").then(snap => {
     lista.innerHTML = "";
     snap.forEach(item => {
       const d = item.val();
+
+      let productosHTML = "";
+      d.productos.forEach(p => {
+        productosHTML += `<li>${p.producto} – ${p.unidades}</li>`;
+      });
+
       lista.innerHTML += `
         <div class="card">
           <b>🛠 ${d.maquina}</b><br>
-          📦 ${d.producto}<br>
-          👥 ${d.personas}<br>
+          👥 ${d.personas}
+          <ul>${productosHTML}</ul>
           <button class="danger" onclick="borrarAsignacion('${turno}','${item.key}')">
             Eliminar
           </button>
@@ -258,10 +321,11 @@ function cargarAsignaciones() {
 }
 cargarAsignaciones();
 
-// borrar una asignación
+// borrar asignación
 function borrarAsignacion(turno, key) {
   if (confirm("¿Eliminar esta asignación?")) {
     db.ref("turnos/" + turno + "/" + key).remove();
+    cargarAsignaciones();
   }
 }
 
@@ -270,6 +334,7 @@ function borrarTurno() {
   const turno = document.getElementById("turno").value;
   if (confirm("¿Borrar TODO el turno?")) {
     db.ref("turnos/" + turno).remove();
+    cargarAsignaciones();
   }
 }
 

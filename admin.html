@@ -306,8 +306,8 @@ function cargarAsignaciones() {
 
       let productosHTML = "";
       d.productos.forEach(p => {
-        productosHTML += `<li>${p.producto} – ${p.unidades}</li>`;
-      });
+      productosHTML += `<li>${p.nombre} – ${p.unidades}</li>`;
+    });
 
       lista.innerHTML += `
         <div class="card">

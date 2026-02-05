@@ -241,7 +241,10 @@ function agregarProducto() {
     return;
   }
 
-  productosAsignados.push({ producto, unidades });
+  productosAsignados.push({
+  nombre: producto,
+  unidades: unidades
+});
   document.getElementById("unidades").value = "";
   mostrarProductos();
 }

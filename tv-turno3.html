@@ -65,14 +65,28 @@ db.ref("turnos/turno3").on("value", snap => {
   }
 
   Object.values(data).forEach(a => {
+
+  let productosHTML = "";
+
+  if (a.productos && Array.isArray(a.productos)) {
+    a.productos.forEach(p => {
+      productosHTML += `
+        <p>📦 ${p.nombre} — <b>${p.unidades}</b></p>
+      `;
+    });
+  } else {
+    productosHTML = "<p>📦 Sin productos</p>";
+  }
+
   cont.innerHTML += `
     <div class="card">
-      <h2>🛠 ${a.maquina}</h2>
-      <p>📦 ${a.producto}</p>
-      <p>👥 ${a.personas}</p>
+      <h2>🛠 ${a.maquina || "Sin máquina"}</h2>
+      ${productosHTML}
+      <p>👥 ${a.personal || "Sin personal"}</p>
     </div>
   `;
 });
+
 
 });
 </script>

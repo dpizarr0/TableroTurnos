@@ -84,7 +84,7 @@ db.ref("turnos/turno1").on("value", snap => {
     <div class="card">
       <h2>🛠 ${a.maquina || "Sin máquina"}</h2>
       ${productosHTML}
-      <p>👥 ${a.personal || "Sin personal"}</p>
+      <p>👥 ${a.personas && a.personas.trim() !== "" ? a.personas : "Sin personal"}</p>
     </div>
   `;
 });

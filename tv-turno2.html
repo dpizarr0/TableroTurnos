@@ -15,14 +15,36 @@ body {
   padding: 30px;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.back {
+  background: #22c55e; 
+  color: #022c22;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 40px;
+  margin: 0;
+  transform: translateX(-40px);
+}
+
 .card {
   background: #111827;
   padding: 20px;
   border-radius: 10px;
   margin-bottom: 20px;
 }
-
-h1 { font-size: 40px; }
 
 .logo {
   position: fixed;
@@ -35,7 +57,11 @@ h1 { font-size: 40px; }
 
 <body>
 
-<h1>🕑 Turno 2</h1>
+<div class="header">
+  <button class="back" onclick="location.href='tv-selector.html'">⬅ Volver</button>
+  <h1>🕐 Turno 2</h1>
+</div>
+
 <div id="contenido"></div>
 
 <img src="logo.png" class="logo">
@@ -65,29 +91,24 @@ db.ref("turnos/turno2").on("value", snap => {
   }
 
   Object.values(data).forEach(a => {
+    let productosHTML = "";
 
-  let productosHTML = "";
+    if (a.productos && Array.isArray(a.productos)) {
+      a.productos.forEach(p => {
+        productosHTML += `<p>📦 ${p.nombre} — <b>${p.unidades}</b></p>`;
+      });
+    } else {
+      productosHTML = "<p>📦 Sin productos</p>";
+    }
 
-  if (a.productos && Array.isArray(a.productos)) {
-    a.productos.forEach(p => {
-      productosHTML += `
-        <p>📦 ${p.nombre} — <b>${p.unidades}</b></p>
-      `;
-    });
-  } else {
-    productosHTML = "<p>📦 Sin productos</p>";
-  }
-
-  cont.innerHTML += `
-    <div class="card">
-      <h2>🛠 ${a.maquina || "Sin máquina"}</h2>
-      ${productosHTML}
-      <p>👥 ${a.personas && a.personas.trim() !== "" ? a.personas : "Sin personal"}</p>
-    </div>
-  `;
-});
-
-
+    cont.innerHTML += `
+      <div class="card">
+        <h2>🛠 ${a.maquina || "Sin máquina"}</h2>
+        ${productosHTML}
+        <p>👥 ${a.personas && a.personas.trim() !== "" ? a.personas : "Sin personal"}</p>
+      </div>
+    `;
+  });
 });
 </script>
 
